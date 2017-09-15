@@ -1,0 +1,46 @@
+{
+	"name": "Mass Delete",
+
+	"namespace":"Stanford\\MassDelete",
+
+	"description": "A module for deleting a large number of records - be careful!!!",
+
+	"versions": [
+		{ "0.1": "Initial Development Version" }
+	],
+
+	"authors": [
+		{
+			"name": "Andy Martin",
+			"email": "andy123@stanford.edu",
+			"institution": "Stanford University"
+		},
+		{
+			"name": "YongJae Lee",
+			"email": "jael@stanford.edu",
+			"institution": "Stanford University"
+		}
+	],
+
+	"permissions": [
+		"delete_data"
+	],
+
+	"links": {
+		"control-center": [
+		],
+		"project": [
+			{
+				"name": "Mass Delete Records",
+				"icon": "gear",
+				"url": "project_mass_delete.php"
+			}
+		]
+	},
+
+	"system-settings": [
+	],
+	
+	"project-settings": [
+	]
+}
