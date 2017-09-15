@@ -4,25 +4,6 @@ $em = new \Stanford\MassDelete\MassDelete();
 
 require_once \ExternalModules\ExternalModules::getProjectHeaderPath();
 
-
-// redcap_connect();
-
-// function redcap_connect() {
-// 	// can just do require '../../redcap_connect.php (or some appropriate relative path)
-// 	// the code here looks for redcap_connect.php up successive parent directories
-// 	$dir = dirname(__FILE__);
-// 	while (!file_exists($dir.'/redcap_connect.php') && strlen($dir) > 3) {
-// 		$dir = dirname($dir);
-// 	}
-// 	if (file_exists($dir.'/redcap_connect.php')) {
-// 		require_once $dir.'/redcap_connect.php';
-// 		return;
-// 	}
-// 	exit;
-// }
-
-
-
 ?>
 <h1>This is the <?= $em->getModuleName() ?> project homepage!</h1>
 <?php
