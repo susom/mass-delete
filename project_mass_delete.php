@@ -90,10 +90,12 @@ if (!empty($massDelete->notes)) {
                     buttons: {
                         'Cancel': function() { $(this).dialog('destroy'); },
                         'Delete': function() {
+                            $(this).dialog('destroy');
+                            showProgress(1);
                             var input = $("<input>")
                                 .attr("type", "hidden")
                                 .attr("name", "delete").val("true");
-                            $('form.delete_records').append(input).submit();
+                            //$('form.delete_records').append(input).submit();
                         }
                     },
                     create:function () {
@@ -121,11 +123,30 @@ if (!empty($massDelete->notes)) {
                         // Parse out contents
                         var list = $('#custom_records_dialog textarea').val();
                         var items = $.map(list.split(/\n|,/), $.trim);
+                        var notFound = [];
+                        var countChecked = 0;
+                        var countTotal = 0;
                         $(items).each(function(i, e) {
-                            console.log (i, e);
-                            $('input[value="' + e + '"]').prop('checked',true);
+                            // console.log (i, e);
+                            // Skip empties
+                            if (e == '') return true;
+
+                            // Verify the record is valid
+                            var record = $('input[value="' + e + '"]');
+                            if (record.length) {
+                                record.prop('checked',true);
+                                countChecked++;
+                            } else {
+                                // Not found
+                                notFound.push(e);
+                            }
+                            countTotal++;
                         });
                         $(this).dialog('close');
+                        // console.log(notFound);
+                        var msg = '<b>' + countChecked + ' of ' + countTotal + ' records checked from custom list</b>';
+                        if (notFound.length > 0) msg += '<br>&nbsp;- Unable to find:<br><ul><li>' + notFound.join('</li><li>') + '</li></ul>';
+                        simpleDialog(msg, "Record Selection Results");
                     }
                 }
             });
