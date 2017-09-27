@@ -6,8 +6,7 @@
 	"description": "A module for deleting a large number of records - be careful!!!",
 
 	"versions": [
-		{ "0.1": "Initial Development Version" },
-		{ "1.0": "Working beta version - in use1"}
+		{ "0.1": "Initial Development Version" }
 	],
 
 	"authors": [
