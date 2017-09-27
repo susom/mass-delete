@@ -6,7 +6,8 @@
 	"description": "A module for deleting a large number of records - be careful!!!",
 
 	"versions": [
-		{ "0.1": "Initial Development Version" }
+		{ "0.1": "Initial Development Version" },
+		{ "1.0": "Working beta version - in use"}
 	],
 
 	"authors": [
@@ -32,8 +33,9 @@
 		"project": [
 			{
 				"name": "Mass Delete Records",
-				"icon": "gear",
-				"url": "project_mass_delete.php"
+				"icon": "cross",
+				"url": "project_mass_delete.php",
+				"TODO-restrict-view": "design"
 			}
 		]
 	},
