@@ -130,6 +130,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	public function handlePost() {
 		if (isset($_POST['delete']) && $_POST['delete'] == 'true') {
 
+
 			// DELETE THE RECORD
 			$post_records = $_POST['records'];
 			$valid_records = array_intersect($post_records,$this->records);
