@@ -95,7 +95,7 @@ if (!empty($massDelete->notes)) {
                             var input = $("<input>")
                                 .attr("type", "hidden")
                                 .attr("name", "delete").val("true");
-                            //$('form.delete_records').append(input).submit();
+                            $('form.delete_records').append(input).submit();
                         }
                     },
                     create:function () {
