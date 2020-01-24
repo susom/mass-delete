@@ -1,56 +1,67 @@
 <?php
 
-$massDelete = new \Stanford\MassDelete\MassDelete();
-
+$massDelete = $module;
 
 require_once \ExternalModules\ExternalModules::getProjectHeaderPath();
 
-// Page title
+// Verify user rights
 $massDelete->validateUserRights('design');
 $massDelete->determineRecords();
 $massDelete->handlePost();
 
-
 // Render Page
 renderPageTitle("<img src='".APP_PATH_IMAGES."application_view_icons.png' class='imgfix2'>&nbsp;Mass Delete a bunch of records");
 
-if (!empty($massDelete->errors)) {
-	print "<div class='alert alert-danger'><ul><li>" . implode("</li><li>", $massDelete->errors) . "</li></ul></div>";
-}
-
-if (!empty($massDelete->notes)) {
-    print "<div class='alert alert-success'><ul><li>" . implode("</li><li>", $massDelete->notes) . "</li></ul></div>";
-}
-
 ?>
-<form class="delete_records" method='POST'>
-<!--<div class="container">-->
-    <!--<div class="row">-->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4>Mark Records for Deletion</h4>
+<div class="container">
+    <?php
+        if (!empty($massDelete->errors)) {
+            print "<div class='alert alert-danger'><ul class='pl-2'><li>" . implode("</li><li>", $massDelete->errors) . "</li></ul></div>";
+        }
+
+        if (!empty($massDelete->notes)) {
+            print "<div class='alert alert-success'><ul class='pl-2'><li>" . implode("</li><li>", $massDelete->notes) . "</li></ul></div>";
+        }
+    ?>
+
+    <div class="row">
+        <p>
+            This module is used to delete a large number of records.  <strong>Do take caution, it REALLY deletes the records</strong>
+            (but only after a confirmation step).
+        </p>
+    </div>
+    <div class="row">
+        <form class="delete_records" method='POST'>
+            <div class="card">
+                <div class="card-header">
+                    <h6>Select Records for Deletion</h6>
 					<?php if (!empty($massDelete->arm_options)) { ?>
                         <div>
                             <label for="arms">Arm:&nbsp;</label><select name="arm"><?php echo implode('',$massDelete->arm_options) ?></select>
                         </div>
 					<?php } ?>
-
                 </div>
-                <div class="panel-body">
+                <div class="card-body">
                     <div class="wrapper">
                         <ul><li><?php print implode("</li><li>",$massDelete->record_checkboxes) ?></li></ul>
                     </div>
                 </div>
-                <div class="panel-footer">
-                    <span data-choice='all'    class="btn btn-default sel"/>All</span>
-                    <span data-choice='none'   class='btn btn-default sel'/>None</span>
-                    <span data-choice='custom' class='btn btn-default customList'/>Custom List</span>
-                    <span id="delete" data-choice='delete' class="btn btn-danger">Delete Selected Records</span>
+                <div class="card-footer">
+                    <div data-choice="all"    class="btn btn-sm btn-secondary sel"/>All</div>
+                    <div data-choice="none"   class="btn btn-sm btn-secondary sel"/>None</div>
+                    <div data-choice="custom" class="btn btn-sm btn-secondary customList"/>Custom List</div>
+                    <div id="delete" data-choice='delete' class="btn pull-right btn-danger"><i class="far fa-trash-alt"></i> Delete Selected Records</div>
                 </div>
             </div>
+        </form>
     <!--</div>   name="Run" value="Delete Selected Records" -->
-<!--</div>-->
-</form>
+    </div>
+</div>
+<?php
+
+require_once \ExternalModules\ExternalModules::getProjectFooterPath();
+
+?>
 
 <style>
     div.alert { border: inherit !important; }
@@ -64,7 +75,7 @@ if (!empty($massDelete->notes)) {
 </style>
 <script type='text/javascript'>
     $(document).ready( function() {
-        $('span.sel').click( function() {
+        $('.sel').click( function() {
             var state = $(this).data('choice') == 'all';
             $('input[name="records[]"]').prop('checked',state);
             return false;
@@ -111,14 +122,15 @@ if (!empty($massDelete->notes)) {
         });
 
 
-        $('span.customList').click( function() {
+        $('.customList').click( function() {
             // Open up a pop-up with a list
-            var data = "<p>Enter a comma-separated or return-separated list of record ids to select</p><textarea class='cr' name='custom_records' placeholder='Enter a comma-separated list of record_ids'></textarea>";
+            var data = "<p>Enter a comma-separated or return-separated list of record ids to select</p>" +
+                "<textarea class='cr' name='custom_records' placeholder='Enter a comma-separated list of record id to select'></textarea>";
             initDialog("custom_records_dialog", data);
             $('#custom_records_dialog').dialog({ bgiframe: true, title: 'Enter Custom Record List',
                 modal: true, width: 650,
                 buttons: {
-                    'Close': function() {  },
+                    'Close': function() { $(this).dialog('destroy'); },
                     'Apply': function() {
                         // Parse out contents
                         var list = $('#custom_records_dialog textarea').val();
@@ -161,21 +173,3 @@ if (!empty($massDelete->notes)) {
 </script>
 
 
-
-<?php
-
-
-
-// print "<pre>" . print_r($Proj,true) . "</pre>";
-// print "<pre>" . print_r(REDCap::getInstrumentNames(),true) . "</pre>";
-
-require_once \ExternalModules\ExternalModules::getProjectFooterPath();
-
-// #display an error from scratch
-// function showError($msg) {
-// 	$HtmlPage = new HtmlPage();
-// 	$HtmlPage->PrintHeaderExt();
-// 	echo "<div class='red'>$msg</div>";
-// 	//Display the project footer
-// 	require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
-// }
