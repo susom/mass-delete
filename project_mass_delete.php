@@ -5,7 +5,7 @@ $massDelete = $module;
 require_once \ExternalModules\ExternalModules::getProjectHeaderPath();
 
 // Verify user rights
-$massDelete->validateUserRights('design');
+$massDelete->validateUserRights('record-delete');
 $massDelete->determineRecords();
 $massDelete->handlePost();
 
