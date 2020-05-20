@@ -49,7 +49,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		$these_rights = \REDCap::getUserRights(USERID);
 		$my_rights = $these_rights[USERID];
 		if (!$my_rights[$right] && !SUPER_USER) {
-			$this->errors[] = "Project Setup rights are required to access MASS DET plugin.";
+			$this->errors[] = "You must have 'Delete Records' privilege in user-rights to use this feature.";
 			$this->renderErrorPage();
 		}
 
