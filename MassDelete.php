@@ -56,7 +56,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 	public function render_page() {
 		$this->renderSectionHeader();
-		$this->renderAlerts();
+		$this->renderErrorsAndNotes();
 		$this->renderPageTabs();
 	}
 
@@ -71,16 +71,24 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		print   RCView::p('', 'This module is used to delete a large number of records. You can either add a custom list of records or select from your record list for deletion.');
 	  }
 
-	public function renderAlerts(){
+	public function renderErrorsAndNotes(){
 
 		if (!empty($this->errors)) {
-            print "<div class='alert alert-danger'><ul class='pl-2'><li>" . implode("</li><li>", $this->errors) . "</li></ul></div>";
+			$this->renderAlerts($this->errors);
         }
 
         if (!empty($this->notes)) {
-            print "<div class='alert alert-success'><ul class='pl-2'><li>" . implode("</li><li>", $this->notes) . "</li></ul></div>";
+			$this->renderAlerts($this->errors, "success");
 		}
 
+	}
+
+	public function renderAlerts($contents, $type = 'danger') {
+		$alerts = [];
+		foreach($contents as $content) {
+			$alert[]= "<div class='alert alert-$type'>$alert</div>";
+		}
+		return $alerts;
 	}
 
     public function renderPageTabs() {
