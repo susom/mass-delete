@@ -74,19 +74,19 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	public function renderErrorsAndNotes(){
 
 		if (!empty($this->errors)) {
-			$this->renderAlerts($this->errors);
+			print $this->renderAlerts($this->errors);
         }
 
         if (!empty($this->notes)) {
-			$this->renderAlerts($this->errors, "success");
+			print $this->renderAlerts($this->errors, "success");
 		}
 
 	}
 
 	public function renderAlerts($contents, $type = 'danger') {
-		$alerts = [];
+		$alerts = "";
 		foreach($contents as $content) {
-			$alert[]= "<div class='alert alert-$type'>$alert</div>";
+			$alerts .= "<div class='alert alert-$type'>$content</div>";
 		}
 		return $alerts;
 	}
@@ -124,15 +124,14 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		}
 		$my_rights = \REDCap::getUserRights($current_user)[$current_user];
 
-		if (!$my_rights[$right] && !SUPER_USER) {
+		# Make sure user has permissions for project
+		if (!$my_rights[$right]) {
 			$this->errors[] = "You must have 'Delete Records' privilege in user-rights to use this feature.";
-			$this->renderErrorPage();
 		}
 
 		# Make sure the user's rights have not expired for the project
 		if ($my_rights['expiration'] != "" && $my_rights['expiration'] < TODAY) {
 			$this->errors[] = 'Your user account has expired for this project.  Please contact the project admin.';
-			$this->renderErrorPage();
 		}
 		$this->my_rights = $my_rights;
 	}
