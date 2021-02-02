@@ -38,27 +38,6 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		<?php
 	}
 
-	// TODO: What is the bast way to render a project-level header but be able to inject js and CSS...
-
-	// public function renderHeader() {
-	// 	// Render the viewer
-	// 	$html = new \HtmlPage();
-	//
-	// 	// Include cs file with file-modification-based timestamp (to aid with caching issues during development)
-	// 	$cs_file = "css/log_view.css";
-	// 	$cs_file_full = $cs_file . "?random=" . filemtime( __DIR__ . DS . $cs_file);
-	//
-	// 	$html->addStylesheet2( $this->getUrl($cs_file_full), "" );
-	// 	$html->PrintHeaderExt();
-	//
-	// 	// Include js file with file-modification-based timestamp (to aid with caching issues during development)
-	// 	$js_file = "js/log_view.js";
-	// 	$js_file_full = $js_file . "?random=" . filemtime( __DIR__ . DS . $js_file );
-	// 	$js_url = $this->getUrl($js_file_full);
-	// 	print "<script type='text/javascript' src='$js_url'></script>";
-	//
-	// 	}
-
 	public function validateUserRights($right = 'design') {
 		# Make sure user has permissions for project or is a super user
 		$these_rights = \REDCap::getUserRights(USERID);
