@@ -116,9 +116,14 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	}	
 
 	public function validateUserRights($right = 'design') {
-		# Make sure user has permissions for project or is a super user
-		$these_rights = \REDCap::getUserRights(USERID);
-		$my_rights = $these_rights[USERID];
+
+		$current_user = USERID;
+		# Check if Impersonification is active
+		if(\UserRights::isImpersonatingUser()){
+			$current_user = $_SESSION['impersonate_user'][PROJECT_ID]['impersonating'];
+		}
+		$my_rights = \REDCap::getUserRights($current_user)[$current_user];
+
 		if (!$my_rights[$right] && !SUPER_USER) {
 			$this->errors[] = "You must have 'Delete Records' privilege in user-rights to use this feature.";
 			$this->renderErrorPage();
