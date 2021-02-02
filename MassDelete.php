@@ -108,7 +108,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		  RCView::span(array('style'=>'vertical-align:middle;'), 'Custom List');
   
 		// Tab to view log
-		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=select-records'] = '<i class="fas check-square"></i> ' .
+		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=record-list'] = '<i class="fas check-square"></i> ' .
 		  RCView::span(array('style'=>'vertical-align:middle;'), 'Select Records');		
   
 		RCView::renderTabs($tabs);
