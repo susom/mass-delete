@@ -1,6 +1,8 @@
 <?php
 namespace Stanford\MassDelete;
 
+use RCView;
+
 class MassDelete extends \ExternalModules\AbstractExternalModule
 {
 
@@ -24,9 +26,9 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	}
 
 	public function init_page() {
-		$this->insertJS();
 		$this->validateUserRights('record_delete');
-
+		$this->insertJS();
+		$this->render_page();
 	}
 
 	public function insertJS() { 
@@ -37,6 +39,59 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 			</script>
 		<?php
 	}
+
+	public function render_page() {
+		$this->renderSectionHeader();
+		$this->renderAlerts();
+		$this->renderPageTabs();
+	}
+
+	public function renderSectionHeader(){
+      
+		print	RCView::div(array('style'=>'max-width:750px;margin-bottom:10px;'),
+					RCView::div(array('style'=>'color: #800000;font-size: 16px;font-weight: bold;float:left;'),
+				  		RCView::fa('fas fa-times-circle fs15 mr-1') . $this->getModuleName()) .
+					RCView::div(array('class'=>'clear'), '')
+			  	);
+
+		print   RCView::p('', 'This module is used to delete a large number of records. You can either add a custom list of records or select from your record list for deletion.');
+	  }
+
+	public function renderAlerts(){
+
+		if (!empty($this->errors)) {
+            print "<div class='alert alert-danger'><ul class='pl-2'><li>" . implode("</li><li>", $this->errors) . "</li></ul></div>";
+        }
+
+        if (!empty($this->notes)) {
+            print "<div class='alert alert-success'><ul class='pl-2'><li>" . implode("</li><li>", $this->notes) . "</li></ul></div>";
+		}
+
+	}
+
+    public function renderPageTabs() {
+
+		// Get URL parameters to ensure dynamic redirection
+		$prefix = $_GET['prefix'];
+		$pid = $_GET['pid'];
+		$em_url = 'ExternalModules/index.php?type=module';
+
+		$page = 'page_mass_delete';
+  
+		// Determine tabs to display
+		$tabs = array();
+  
+		// Tab to view list of existing webhooks
+		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=custom-list'] = '<i class="fas stream"></i> ' .
+		  RCView::span(array('style'=>'vertical-align:middle;'), 'Custom List');
+  
+		// Tab to view log
+		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=select-records'] = '<i class="fas check-square"></i> ' .
+		  RCView::span(array('style'=>'vertical-align:middle;'), 'Select Records');		
+  
+		RCView::renderTabs($tabs);
+  
+	}	
 
 	public function validateUserRights($right = 'design') {
 		# Make sure user has permissions for project or is a super user
