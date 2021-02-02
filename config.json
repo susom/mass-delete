@@ -35,6 +35,12 @@
 				"icon": "cross",
 				"url": "project_mass_delete.php",
 				"TODO-restrict-view": "design"
+			},
+			{
+				"name": "Mass Delete",
+				"icon": "fas fa-times-circle",
+				"url": "page_mass_delete.php",
+				"show-header-and-footer": true
 			}
 		]
 	},
