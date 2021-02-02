@@ -23,6 +23,21 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		parent::__construct();
 	}
 
+	public function init_page() {
+		$this->insertJS();
+		$this->validateUserRights('record_delete');
+
+	}
+
+	public function insertJS() { 
+		?>
+			<script src="<?= $this->getUrl("js/mass_delete.js") ?>"></script>
+			<script>
+				Stanford_MassDelete.requestHandlerUrl = "<?= $this->getUrl("requestHandler.php") ?>";
+			</script>
+		<?php
+	}
+
 	// TODO: What is the bast way to render a project-level header but be able to inject js and CSS...
 
 	// public function renderHeader() {
