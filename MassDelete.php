@@ -26,6 +26,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	}
 
 	public function init_page() {
+		$this->checkForRedirect();
 		$this->validateUserRights('record_delete');
 		$this->insertJS();
 		$this->render_page();
@@ -38,6 +39,19 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 				Stanford_MassDelete.requestHandlerUrl = "<?= $this->getUrl("requestHandler.php") ?>";
 			</script>
 		<?php
+	}
+
+	public function checkForRedirect() {
+		if(isset($_GET['prefix'])) {
+		  if(strpos($_SERVER['REQUEST_URI'], 'index.php') === false) {
+
+			$view = 'custom-list';
+			$page = 'page_mass_delete';
+
+			\HttpClient::redirect('index.php?prefix='. $_GET['prefix'] .'&type=module&page='.$page.'&view='.$view.'&pid='.$_GET['pid'].'');
+			
+		  }
+		}
 	}
 
 	public function render_page() {
