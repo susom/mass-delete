@@ -6,17 +6,14 @@ use RCView;
 class MassDelete extends \ExternalModules\AbstractExternalModule
 {
 
-	public $project_id;
-
 	public $records;
-	public $record_checkboxes = array();	// Array to hold checkboxes for display
 
 	public $errors = array();
 	public $notes = array();
+
 	public $my_rights = array();			// Array of user's userrights
 	public $group_id = null;				// The current user's group ID
 
-	public $arm_options = array();			// Array for select of arms/records
 	public $arm = null;						// Active arm number
 	public $arm_id = null;					// Arm ID
 
@@ -27,9 +24,17 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 	public function init_page() {
 		$this->checkForRedirect();
+		$this->insertCSS();
 		$this->validateUserRights('record_delete');
+		$this->setGroupId();
 		$this->insertJS();
 		$this->render_page();
+	}
+
+	public function insertCSS() {
+		?>
+		<link rel="stylesheet" href="<?= $this->getUrl("style.css") ?>">
+		<?php
 	}
 
 	public function insertJS() { 
@@ -54,10 +59,20 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		}
 	}
 
+	public function setGroupId() {
+		if ( !empty( \REDCap::getGroupNames() ) && !empty($this->my_rights['group_id']) ) {
+			$this->group_id = $this->my_rights['group_id'];
+			$this->notes['dag_filter'] = "Filtering records for your group: " . \REDCap::getGroupNames(FALSE, $this->group_id);
+		}
+	}
+
 	public function render_page() {
 		$this->renderSectionHeader();
+		$this->handleDelete();
 		$this->renderErrorsAndNotes();
-		$this->renderPageTabs();
+		if( !isset($_POST['result']) ) {
+			$this->renderPageTabs();
+		}
 	}
 
 	public function renderSectionHeader(){
@@ -78,7 +93,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
         }
 
         if (!empty($this->notes)) {
-			print $this->renderAlerts($this->errors, "success");
+			print $this->renderAlerts($this->notes, "success");
 		}
 
 	}
@@ -113,7 +128,19 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
   
 		RCView::renderTabs($tabs);
   
-	}	
+	}
+
+	public function fetchRecords($arm_id, $dag = null){
+		global $Proj;
+
+		// Get all records
+		$records = \Records::getRecordList($Proj->project_id, $dag, false, false, $arm_id );
+		$records = array_values($records);
+		$records = array_chunk($records, 1000);
+
+		echo json_encode(array("records" => $records) ) ;
+		
+	}
 
 	public function validateUserRights($right = 'design') {
 
@@ -127,6 +154,8 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		# Make sure user has permissions for project
 		if (!$my_rights[$right]) {
 			$this->errors[] = "You must have 'Delete Records' privilege in user-rights to use this feature.";
+			self::renderErrorPage();
+
 		}
 
 		# Make sure the user's rights have not expired for the project
@@ -136,75 +165,21 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		$this->my_rights = $my_rights;
 	}
 
-
-	public function determineRecords() {
-		// Check DAG
-		if ( !empty( \REDCap::getGroupNames() ) && !empty($this->my_rights['group_id']) ) {
-			$this->group_id = $this->my_rights['group_id'];
-			$this->notes['dag_filter'] = "Filtering records for your group: " . \REDCap::getGroupNames(FALSE, $this->group_id);
-		}
-
-		// Check ARM
-		global $Proj;
-		if ($Proj->longitudinal && $Proj->multiple_arms) {
-			// Get the current arm or default to 1
-			$arm = isset($_POST['arm']) ? $_POST['arm'] : 1;
-
-			// Verify the current arm is valid
-			if (!isset($Proj->events[$arm])) {
-				$notes[] = "Unable to find arm $arm in this project - setting the first arm as active";
-				unset($_POST['delete']);           // In case this is a delete post, prevent the delete from happening
-				$events = $Proj->events;
-				$arm = key($events);            // Take the frist arm number as the current
-			}
-			$this->arm = $arm;
-			$this->arm_id = $Proj->getArmIdFromArmNum($arm);
-
-			// Loop through all arms to build select box
-			$this->arm_options = array();
-			foreach ($Proj->events as $arm_num => $arm_detail) {
-				$arm_records = \Records::getRecordList($Proj->project_id, $this->group_id, false, false, $arm_num);
-				if ($arm == $arm_num) {
-					// Pull the current records
-					$this->records = $arm_records;
-					$selected = "selected='selected'";
-					$notes[] = "Showing records from arm $arm (" . $arm_detail['name'] . ")";
-				} else {
-					$selected = "";
-				}
-				$this->arm_options[] = "<option value='$arm_num' $selected> {$arm_detail['name']} - " .
-					count($arm_records) . " records</option>";
-			}
-		} else {
-			// Get all records
-			$this->records = \Records::getRecordList($Proj->project_id, $this->group_id);
-		}
-
-		// Obtain custom record label & secondary unique field labels for ALL records.
-		$extra_record_labels = \Records::getCustomRecordLabelsSecondaryFieldAllRecords($this->records, true, $this->arm_id);
-
-		// BUILD CHECKBOXES
-		$cbx_array = array();
-		$max_length = 0;
-		foreach ($this->records as $record) {
-			$label = $record .  ( empty($extra_record_labels[$record]) ? "" : " " . $extra_record_labels[$record]);
-			$max_length = max($max_length,strlen($label));
-
-			$cbx_array[] = "<input type='checkbox' name='records[]' value='$record'/> $label";
-		}
-
-		unset($extra_record_labels);
-
-		$max_length = $max_length + 3; // add space for checkbox
-
-		$this->max_length = $max_length;
-		$this->record_checkboxes = $cbx_array;
-
-	}
-
-	public function handlePost() {
+	public function handleDelete() {
 		if (isset($_POST['delete']) && $_POST['delete'] == 'true') {
 
+			global $Proj;
+
+			if ($Proj->longitudinal && $Proj->multiple_arms) {
+
+				$arm = $_POST['arm'];
+				$this->arm = $arm;
+				$this->arm_id = $Proj->getArmIdFromArmNum($arm);
+				$this->records = \Records::getRecordList($Proj->project_id, $this->group_id, false, false, $arm);
+			}
+			else {
+				$this->records = \Records::getRecordList($Proj->project_id, $this->group_id);
+			}
 
 			// DELETE THE RECORD
 			$post_records = $_POST['records'];
@@ -212,12 +187,9 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 			if (count($valid_records) != count($post_records)) {
 				$this->errors[] = "Invalid records were requested for deletion.  Please try again.";
-				self::renderErrorPage();
 			} else {
-				// Continue to process
-				global $Proj;
-				foreach ($valid_records as $record) {
-					// print "<br>Deleting $record";
+
+				foreach($valid_records as $record) {
 					\Records::deleteRecord(
 						$record,
 						$Proj->table_pk,
@@ -229,22 +201,19 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 						" (" . $this->getModuleName() . ")"
 					);
 				}
-				$this->notes[] = "<b>Deleted " . count($valid_records) . " record" .
-					(count($valid_records > 1) ? "s" : "") .
-					"</b>";
 
-				// Refresh the record lists as they may have changed since the deletion
-				$this->determineRecords();
+				$this->notes[] = "<b>Deleted " . count($valid_records) . " record" .
+				(count($valid_records > 1) ? "s" : "") .
+				"</b>";
 			}
+
 		}
+		
 	}
 
 	public function renderErrorPage($msg = '') {
-		if (!empty($msg)) print "<h3>ERROR:</h3>$msg";
 
-    	if (!empty($this->errors)) {
-			print "<div class='alert alert-danger'><ul><li>" . implode("</li><li>", $this->errors) . "</li></ul></div>";
-		}
+		print $this->renderAlerts($this->errors);
 		exit();
 	}
 
