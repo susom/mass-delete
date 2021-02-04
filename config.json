@@ -9,6 +9,8 @@
 		{ "1.0.0": "Initial Development Version" }
 	],
 
+	"framework-version": 6,
+
 	"authors": [
 		{
 			"name": "Andy Martin",
@@ -19,7 +21,12 @@
 			"name": "YongJae Lee",
 			"email": "jael@stanford.edu",
 			"institution": "Stanford University"
-		}
+		},
+		{
+            "name": "Ekin Tertemiz",
+            "email": "ekin.tertemiz@swisstph.ch",
+            "institution": "Swiss Tropical and Public Health Institute"
+        }
 	],
 
 	"permissions": [
@@ -31,10 +38,10 @@
 		],
 		"project": [
 			{
-				"name": "Mass Delete Records",
-				"icon": "cross",
-				"url": "project_mass_delete.php",
-				"TODO-restrict-view": "design"
+				"name": "Mass Delete",
+				"icon": "fas fa-times-circle",
+				"url": "page_mass_delete.php",
+				"show-header-and-footer": true
 			}
 		]
 	},
