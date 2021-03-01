@@ -1,7 +1,6 @@
 <?php
-/** @var \Stanford\MassDelete $module 
- * 
- */
+namespace Stanford\MassDelete;
+/** @var MassDelete $module */
 
 $module->init_page();
 
@@ -11,7 +10,7 @@ $hasArms = $Proj->longitudinal && $Proj->multiple_arms; ?>
 <div class="container">
 
     <?php if( isset($_POST['result'])):  ?>
-        <p><a href="<?= $module->getUrl("page_mass_delete.php") ?> ">Click here</a> to go back.</p>
+        <p><a href="<?= $module->getUrl("page_mass_delete.php") ?> "><button class="btn btn-primary"><i class="fas fa-arrow-circle-left"></i> Click here to go back.</button></a></p>
     <?php else : ?>
         <div id="<?= $_GET['view'] ?>" class="row" >
             <div class="col">
@@ -32,7 +31,7 @@ $hasArms = $Proj->longitudinal && $Proj->multiple_arms; ?>
                             <?= implode('', $module->arm_options) ?>                    
                         </select>
                         <small id="selectHelpBlock" class="form-text text-muted">
-                            This option has to be defined for longtidunal projects with multiple arms.
+                            This option has to be defined for longitudinal projects with multiple arms.
                         </small>
                     </div>
                 <?php endif; ?>                       
@@ -40,7 +39,7 @@ $hasArms = $Proj->longitudinal && $Proj->multiple_arms; ?>
                     <div class="form-group">
                         <p>Enter a comma-separated or return-separated list of record ids</p>
                         <div class="input-group">
-                            <textarea <?= $hasArms ? "disabled" : "" ?> class="form-control list-input-step"  rows="10" aria-label="With textarea"></textarea>                  
+                            <textarea <?= $hasArms ? "disabled" : "" ?> class="form-control list-input-step"  rows="10" aria-label="With textarea"></textarea>
                             <div class="input-group-append">
                                 <button 
                                     class="btn btn-outline-secondary" 

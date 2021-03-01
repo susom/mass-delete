@@ -30,7 +30,8 @@
 	],
 
 	"permissions": [
-		"delete_data"
+		"delete_data",
+		"redcap_module_link_check_display"
 	],
 
 	"links": {

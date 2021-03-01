@@ -1,4 +1,6 @@
 <?php
+namespace Stanford\MassDelete;
+/** @var MassDelete $module */
 
 $massDelete = $module;
 
@@ -40,6 +42,9 @@ renderPageTitle("<img src='".APP_PATH_IMAGES."application_view_icons.png' class=
                             <label for="arms">Arm:&nbsp;</label><select name="arm"><?php echo implode('',$massDelete->arm_options) ?></select>
                         </div>
 					<?php } ?>
+                    <div>
+                        <label for"reports">Select Records from Report: </label><select name="report"><?php echo implode("", $massDelete->report_options) ?></select>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="wrapper">
@@ -48,13 +53,12 @@ renderPageTitle("<img src='".APP_PATH_IMAGES."application_view_icons.png' class=
                 </div>
                 <div class="card-footer">
                     <div data-choice="all"    class="btn btn-sm btn-secondary sel"/>All</div>
-                    <div data-choice="none"   class="btn btn-sm btn-secondary sel"/>None</div>
+                    <div data-choice="none"   class="btn btn-sm btn-secondary sel ml-1"/>None</div>
                     <div data-choice="custom" class="btn btn-sm btn-secondary customList"/>Custom List</div>
                     <div id="delete" data-choice='delete' class="btn pull-right btn-danger"><i class="far fa-trash-alt"></i> Delete Selected Records</div>
                 </div>
             </div>
         </form>
-    <!--</div>   name="Run" value="Delete Selected Records" -->
     </div>
 </div>
 <?php

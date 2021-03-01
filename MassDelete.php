@@ -8,6 +8,8 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 	public $records;
 
+	public $canDelete = false;             // Does user have access to module
+
 	public $errors = array();
 	public $notes = array();
 
@@ -17,15 +19,9 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	public $arm = null;						// Active arm number
 	public $arm_id = null;					// Arm ID
 
-    public function __construct()
-	{
-		parent::__construct();
-	}
-
 	public function init_page() {
-		$this->checkForRedirect();
 		$this->insertCSS();
-		$this->validateUserRights('record_delete');
+		$this->validateUserRights();
 		$this->setGroupId();
 		$this->insertJS();
 		$this->render_page();
@@ -46,19 +42,6 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		<?php
 	}
 
-	public function checkForRedirect() {
-		if(isset($_GET['prefix'])) {
-		  if(strpos($_SERVER['REQUEST_URI'], 'index.php') === false) {
-
-			$view = 'custom-list';
-			$page = 'page_mass_delete';
-
-			\HttpClient::redirect('index.php?prefix='. $_GET['prefix'] .'&type=module&page='.$page.'&view='.$view.'&pid='.$_GET['pid'].'');
-			
-		  }
-		}
-	}
-
 	public function setGroupId() {
 		if ( !empty( \REDCap::getGroupNames() ) && !empty($this->my_rights['group_id']) ) {
 			$this->group_id = $this->my_rights['group_id'];
@@ -68,15 +51,12 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 	public function render_page() {
 		$this->renderSectionHeader();
-		$this->handleDelete();
+		if ($this->canDelete) $this->handleDelete();
 		$this->renderErrorsAndNotes();
-		if( !isset($_POST['result']) ) {
-			$this->renderPageTabs();
-		}
+		if( !isset($_POST['result']) && $this->canDelete ) $this->renderPageTabs();
 	}
 
 	public function renderSectionHeader(){
-      
 		print	RCView::div(array('style'=>'max-width:750px;margin-bottom:10px;'),
 					RCView::div(array('style'=>'color: #800000;font-size: 16px;font-weight: bold;float:left;'),
 				  		RCView::fa('fas fa-times-circle fs15 mr-1') . $this->getModuleName()) .
@@ -84,10 +64,9 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 			  	);
 
 		print   RCView::p('', 'This module is used to delete a large number of records. You can either add a custom list of records or select from your record list for deletion.');
-	  }
+    }
 
 	public function renderErrorsAndNotes(){
-
 		if (!empty($this->errors)) {
 			print $this->renderAlerts($this->errors);
         }
@@ -107,28 +86,41 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	}
 
     public function renderPageTabs() {
-
-		// Get URL parameters to ensure dynamic redirection
-		$prefix = $_GET['prefix'];
-		$pid = $_GET['pid'];
-		$em_url = 'ExternalModules/index.php?type=module';
-
-		$page = 'page_mass_delete';
-  
-		// Determine tabs to display
 		$tabs = array();
-  
+	    $em_url = $this->getUrl('page_mass_delete.php');
+
 		// Tab to view list of existing webhooks
-		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=custom-list'] = '<i class="fas stream"></i> ' .
+		$tabs[ $em_url . '&view=custom-list'] = '<i class="fas stream"></i> ' .
 		  RCView::span(array('style'=>'vertical-align:middle;'), 'Custom List');
   
 		// Tab to view log
-		$tabs[ $em_url . '&prefix=' .$prefix. '&page='.$page.'&view=record-list'] = '<i class="fas check-square"></i> ' .
-		  RCView::span(array('style'=>'vertical-align:middle;'), 'Select Records');		
-  
-		RCView::renderTabs($tabs);
-  
-	}
+		$tabs[ $em_url . '&view=record-list'] = '<i class="fas check-square"></i> ' .
+		  RCView::span(array('style'=>'vertical-align:middle;'), 'Select Records');
+
+		// Default to custom-list
+        if (empty($_GET['view'])) $_GET['view'] = 'custom-list';
+
+	    ?>
+        <div id="sub-nav" style="margin:5px 0 20px;">
+            <ul>
+			    <?php
+			    foreach ($tabs as $this_url=>$this_label)
+			    {
+				    // Get view for current page:
+				    $qs = parse_url($this_url, PHP_URL_QUERY);
+				    parse_str($qs, $these_param_pairs);
+				    $this_view = $these_param_pairs['view'];
+				    ?>
+                    <li <?php if ($this_view == $_GET['view']) echo 'class="active"'?>>
+                        <a href="<?php echo $this_url ?>" style="font-size:13px;color:#393733;padding:6px 9px 5px 10px;"><?php echo $this_label ?></a>
+                    </li>
+				    <?php
+			    } ?>
+            </ul>
+        </div>
+        <div class="clear"></div>
+        <?php
+    }
 
 	public function fetchRecords($arm_id, $dag = null){
 		global $Proj;
@@ -142,28 +134,68 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		
 	}
 
-	public function validateUserRights($right = 'design') {
+	public function validateUserRights($right = 'record_delete') {
+        $this->canDelete = $this->checkUserRight($right);
+        if (!empty($this->errors)) {
+            self::renderErrorPage();
+        }
+	}
 
-		$current_user = USERID;
-		# Check if Impersonification is active
+	/**
+     * Return True/False of user has specified right
+	 * @param $right
+	 * @return bool
+	 */
+	public function checkUserRight($right) {
+
+		# Check if Impersonification is active (trumps super-user)
 		if(\UserRights::isImpersonatingUser()){
 			$current_user = $_SESSION['impersonate_user'][PROJECT_ID]['impersonating'];
+		} else {
+			$current_user = defined("USERID") ? USERID : null;
+
+			# If SuperUser - then let them through
+			if (defined("SUPER_USER") && SUPER_USER) return true;
 		}
-		$my_rights = \REDCap::getUserRights($current_user)[$current_user];
+
+		if (empty($current_user)) {
+            $this->errors[] = "Missing required user id";
+		    return false;
+		}
 
 		# Make sure user has permissions for project
+		$userRights = \REDCap::getUserRights($current_user);
+		$my_rights = isset( $userRights[$current_user] ) ? $userRights[$current_user] : null;
 		if (!$my_rights[$right]) {
-			$this->errors[] = "You must have 'Delete Records' privilege in user-rights to use this feature.";
-			self::renderErrorPage();
-
+			$this->errors[] = "You must have '$right' privilege in user-rights to use this feature.";
+            return false;
 		}
 
 		# Make sure the user's rights have not expired for the project
 		if ($my_rights['expiration'] != "" && $my_rights['expiration'] < TODAY) {
 			$this->errors[] = 'Your user account has expired for this project.  Please contact the project admin.';
+            return false;
 		}
+
+        # Save rights
 		$this->my_rights = $my_rights;
+		return true;
 	}
+
+	/**
+     * Only show the link to the EM if record-delete is set
+	 * @param $project_id
+	 * @param $link
+	 * @return null
+	 */
+	public function redcap_module_link_check_display($project_id, $link) {
+	    if ($this->checkUserRight('record_delete')) {
+	        return $link;
+	    } else {
+	        return null;
+	    }
+	}
+
 
 	public function handleDelete() {
 		if (isset($_POST['delete']) && $_POST['delete'] == 'true') {

@@ -1,9 +1,14 @@
 <?php
-/** @var \ Stanford\MassDelete $module */
+namespace Stanford\MassDelete;
+/** @var MassDelete $module */
 
-if ($_REQUEST['type'] == 'triggerFetchRecords') {
-    $module->fetchRecords(
-        $_POST["arm_id"],
-        $_POST["group_id"]
-    );
+$module->validateUserRights();
+
+if ($module->canDelete) {
+	if ($_REQUEST['type'] == 'triggerFetchRecords') {
+		$module->fetchRecords(
+			$_POST["arm_id"],
+			$_POST["group_id"]
+		);
+	}
 }
