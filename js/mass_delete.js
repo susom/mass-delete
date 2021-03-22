@@ -37,10 +37,17 @@ $(function() {
             $('#btn-delete-selection').click( function() {
 
                 var num_selected = selection.length;
+                var num_selected_forms = $('input[name="form_event[]"]:checked').length;
+                var confirm_text;
+                if (num_selected_forms > 0) {
+                    confirm_text = "Are you sure you want to delete "+num_selected_forms+" forms for "+num_selected+" records? This is permanent.";
+                } else {
+                    confirm_text = "Are you sure you want to delete the selected "+num_selected+" records? This is permanent.";
+                }
                 
                 initDialog("confirmDeletion");
                 $('#confirmDeletion')
-                    .html("Are you sure you want to delete the selected "+num_selected+" records? This is permanent.")
+                    .html(confirm_text)
                     .dialog({
                         title: "Confirm Deletion",
                         bgiframe:true,
@@ -67,6 +74,22 @@ $(function() {
     
                 return false;
             });
+
+            // The checkboxes created from REDCap do not have a value set so no value comes through the form submit
+            // create a value attribute to be the same as the id.
+            var all_ckbx = $('#choose_select_forms_events_div_sub input[id^="ef-"]');
+            $.each(all_ckbx, function (key, val) {
+                var value = $(val).attr('id');
+                $(val).attr("value", value);
+                $(val).attr("name", "form_event[]")
+
+            });
+
+            // Take off the buttons and title that we don't want with the checkboxes.
+            $("#select_links_forms button").remove();
+            $("#select_links_forms a").first().css("margin-left", "5px");
+            var title = $("#choose_select_forms_events_div_sub div").first();
+            title.html("");
 
         })
 
@@ -190,8 +213,16 @@ $(function() {
                 $('#arm-select').prop("disabled", false);
             }
         }
-        
 
 })
+
+
+function selectAllInEvent(event_name,ob) {
+    $('#choose_select_forms_events_div_sub input[id^="ef-'+event_name+'-"]').prop('checked',$(ob).prop('checked'));
+}
+
+function selectAllFormsEvents(select_all) {
+    $('#choose_select_forms_events_div_sub input[type="checkbox"]').prop('checked',select_all);
+}
 
 var Stanford_MassDelete = {};

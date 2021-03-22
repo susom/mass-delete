@@ -36,3 +36,7 @@ div.alert {
     transform: rotate(90deg);
     display: inline-block;
 }
+
+.form-group {
+    padding-top: 20px;
+}

@@ -2,6 +2,9 @@
 namespace Stanford\MassDelete;
 
 use RCView;
+use \Plugin;
+use \Exception;
+require_once 'RepeatingForms.php';
 
 class MassDelete extends \ExternalModules\AbstractExternalModule
 {
@@ -26,6 +29,10 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		$this->insertJS();
 		$this->render_page();
 	}
+
+	public function render_event_forms() {
+        $this->renderSectionHeaderForms();
+    }
 
 	public function insertCSS() {
 		?>
@@ -59,14 +66,15 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 	public function renderSectionHeader(){
 		print	RCView::div(array('style'=>'max-width:750px;margin-bottom:10px;'),
 					RCView::div(array('style'=>'color: #800000;font-size: 16px;font-weight: bold;float:left;'),
-				  		RCView::fa('fas fa-times-circle fs15 mr-1') . $this->getModuleName()) .
+				  		RCView::fa('fas fa-times-circle fs15 mr-1') . $this->getModuleName() . ' Records') .
 					RCView::div(array('class'=>'clear'), '')
 			  	);
 
-		print   RCView::p('', 'This module is used to delete a large number of records. You can either add a custom list of records or select from your record list for deletion.');
+		print   RCView::p('', 'This section is used to delete a large number of records. You can either add a custom list of records or select from your record list for deletion.');
     }
 
-	public function renderErrorsAndNotes(){
+
+    public function renderErrorsAndNotes(){
 		if (!empty($this->errors)) {
 			print $this->renderAlerts($this->errors);
         }
@@ -198,49 +206,81 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 
 	public function handleDelete() {
+
 		if (isset($_POST['delete']) && $_POST['delete'] == 'true') {
 
-			global $Proj;
+            Plugin::log("POST: " . json_encode($_POST));
 
-			if ($Proj->longitudinal && $Proj->multiple_arms) {
+            global $Proj;
 
-				$arm = $_POST['arm'];
-				$this->arm = $arm;
-				$this->arm_id = $Proj->getArmIdFromArmNum($arm);
-				$this->records = \Records::getRecordList($Proj->project_id, $this->group_id, false, false, $arm);
-			}
-			else {
-				$this->records = \Records::getRecordList($Proj->project_id, $this->group_id);
-			}
+            // See if we are deleting forms in events or whole records
+            $form_event = $_POST['form_event'];
 
-			// DELETE THE RECORD
-			$post_records = $_POST['records'];
-			$valid_records = array_intersect($post_records,$this->records);
+            // Delete the whole record
+            if ($Proj->longitudinal && $Proj->multiple_arms) {
 
-			if (count($valid_records) != count($post_records)) {
-				$this->errors[] = "Invalid records were requested for deletion.  Please try again.";
-			} else {
+                $arm = $_POST['arm'];
+                $this->arm = $arm;
+                $this->arm_id = $Proj->getArmIdFromArmNum($arm);
+                $this->records = \Records::getRecordList($Proj->project_id, $this->group_id, false, false, $arm);
+            } else {
+                $this->records = \Records::getRecordList($Proj->project_id, $this->group_id);
+            }
 
-				foreach($valid_records as $record) {
-					\Records::deleteRecord(
-						$record,
-						$Proj->table_pk,
-						$Proj->multiple_arms,
-						$Proj->project_id['randomization'],
-						$Proj->project['status'],
-						$Proj->project['require_change_reason'],
-						$this->arm_id,
-						" (" . $this->getModuleName() . ")"
-					);
-				}
+            // Determine which records we need to delete
+            $post_records = $_POST['records'];
+            $valid_records = array_intersect($post_records, $this->records);
 
-				$this->notes[] = "<b>Deleted " . count($valid_records) . " record" .
-				(count($valid_records > 1) ? "s" : "") .
-				"</b>";
-			}
+            if (count($valid_records) != count($post_records)) {
+                $this->errors[] = "Invalid records were requested for deletion.  Please try again.";
+            } else {
 
-		}
-		
+                if (empty($form_event)) {
+
+                    // DELETE THE RECORD
+                    foreach ($valid_records as $record) {
+                        \Records::deleteRecord(
+                            $record,
+                            $Proj->table_pk,
+                            $Proj->multiple_arms,
+                            $Proj->project_id['randomization'],
+                            $Proj->project['status'],
+                            $Proj->project['require_change_reason'],
+                            $this->arm_id,
+                            " (" . $this->getModuleName() . ")"
+                        );
+                    }
+
+                    $this->notes[] = "<b>Deleted " . count($valid_records) . " record" .
+                        (count($valid_records) > 1 ? "s" : "") .
+                        "</b>";
+                } else {
+
+                    // Figure out the form and event that we are deleting
+                    $deleted_forms = '';
+                    foreach ($form_event as $one_form_event) {
+
+                        // Split out the form and event
+                        list($selected_event_name, $selected_event_id, $selected_form) = $this->splitFormEvent($one_form_event);
+                        $deleted_forms .= '   <li>[' . $selected_event_name . '] ' . $selected_form;
+
+                        // See if this is a repeating
+                        $repeating = $Proj->getRepeatingFormsEvents();
+                        if (empty($repeating[$selected_event_id][$selected_form])) {
+                            $repeat_form = false;
+                        } else {
+                            $repeat_form = true;
+                        }
+
+                        $status = $this->deleteForm($selected_event_id, $selected_form, $repeat_form, $valid_records);
+
+                    }
+                    $this->notes[] = "<b>Deleted forms " . $deleted_forms . "<br> for " . count($valid_records) . " record" .
+                        (count($valid_records) > 1 ? "s" : "") .
+                        "</b>";
+                }
+            }
+        }
 	}
 
 	public function renderErrorPage($msg = '') {
@@ -248,6 +288,87 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 		print $this->renderAlerts($this->errors);
 		exit();
 	}
+
+    public function initEventForms() {
+
+        $this->render_event_forms();
+        $this->getFormEventList();
+
+    }
+
+    public function renderSectionHeaderForms() {
+
+        print	RCView::div(array('style'=>'max-width:750px;margin-bottom:10px;'),
+            RCView::div(array('style'=>'color: #800000;font-size: 16px;font-weight: bold;float:left;'),
+                RCView::fa('fas fa-times-circle fs15 mr-1') . $this->getModuleName() . ' Forms') .
+            RCView::div(array('class'=>'clear'), '')
+        );
+
+        print   RCView::p('', 'This section is used to delete a large number of forms (either repeating or non-repeating). You can select the event/form where you want to delete data. <b>If you want to delete the complete record, DO NOT select any forms.</b>');
+    }
+
+
+    public function getFormEventList() {
+
+        $forms =  \RecordDashboard::renderSelectedFormsEvents();
+        print $forms;
+    }
+
+    public function splitFormEvent($selected_form_event) {
+
+        global $Proj;
+
+        // The format is 'ef-' . event name . '-' . form name for longitudinal projects
+        // The format is 'ef--' . form name for class projects
+        $pieces = explode("-", $selected_form_event);
+
+        // Find the event_id. If no event_name is specified, there is only one event
+        if (empty($pieces[1])) {
+            $event_id = $Proj->firstEventId;
+        } else {
+            $event_id = null;
+            $events = \REDCap::getEventNames(true);
+            foreach ($events as $event_num => $event_name) {
+                if ($event_name == $pieces[1]) {
+                    $event_id = $event_num;
+                    break;
+                }
+            }
+        }
+
+        return array($pieces[1], $event_id, $pieces[2]);
+
+    }
+
+    public function deleteForm($selected_event_id, $selected_form, $repeating_form, $record_list) {
+
+	    global $Proj;
+
+        $proj_id = $Proj->project_id;
+	    if ($repeating_form) {
+            // Using the repeating class to delete instances
+            try {
+                $rf = new RepeatingForms($proj_id, $selected_form);
+            } catch (Exception $ex) {
+                Plugin::log("Exception when creating class RepeatingForms");
+                return;
+            }
+            foreach($record_list as $record_id) {
+                $rf->loadData($record_id, $selected_event_id);
+                $all_instances = $rf->getAllInstanceIds($record_id, $selected_event_id);
+                foreach($all_instances as $instance_id) {
+                    $log_id = $rf->deleteInstance($record_id, $instance_id, $selected_event_id);
+;               }
+            }
+
+        } else {
+
+            foreach($record_list as $record_id) {
+                $log_id = \Records::deleteForm($proj_id, $record_id, $selected_form, $selected_event_id, null);
+                Plugin::log("Log ID is $log_id for delete of form $selected_form, record $record_id in project $proj_id");
+            }
+        }
+    }
 
 }
 
