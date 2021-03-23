@@ -135,13 +135,22 @@ class RepeatingForms
         $repeating_forms = REDCap::getData($this->pid, $return_format, array($record_id), $this->fields, $this->event_id, NULL, false, false, false, $filter, true);
 
         // If this is a classical project, we are not adding event_id.
+        // When this is a repeating event, there is a blank for the form since all forms are repeated
         foreach (array_keys($repeating_forms) as $record) {
             foreach ($this->events_enabled as $event) {
                 if (!is_null($repeating_forms[$record]["repeat_instances"][$event]) and !empty($repeating_forms[$record_id]["repeat_instances"][$event])) {
-                    if ($this->is_longitudinal) {
-                        $this->data[$record_id][$event] = $repeating_forms[$record_id]["repeat_instances"][$event][$this->instrument];
+                    $repeat_data = $repeating_forms[$record]["repeat_instances"][$event];
+                    $repeat_type = array_keys($repeating_forms[$record]["repeat_instances"][$event])[0];
+                    if (empty($repeat_type)) {
+                        $form_data = $repeat_data[''];
                     } else {
-                        $this->data[$record_id] = $repeating_forms[$record_id]["repeat_instances"][$event][$this->instrument];
+                        $form_data = $repeat_data[$this->instrument];
+                    }
+
+                    if ($this->is_longitudinal) {
+                        $this->data[$record_id][$event] = $form_data;
+                    } else {
+                        $this->data[$record_id] = $form_data;
                     }
                 }
             }
@@ -391,7 +400,14 @@ class RepeatingForms
         }
     }
 
-    // TBD: Not sure how to delete an instance ????
+    /**
+     * This function will delete the specified instance of a repeating form or repeating event.
+     *
+     * @param $record_id
+     * @param $instance_id
+     * @param null $event_id
+     * @return int $log_id - log entry number for this delete action
+     */
     public function deleteInstance($record_id, $instance_id, $event_id = null) {
 
         // If longitudinal and event_id = null, send back an error
@@ -400,9 +416,9 @@ class RepeatingForms
             return false;
         }
 
-        $log_id = \Records::deleteForm($this->pid, $record_id, $this->instrument, $event_id, $instance_id);
+        $log_id = Records::deleteForm($this->pid, $record_id, $this->instrument, $event_id, $instance_id);
 
-        return true;
+        return $log_id;
     }
 
     /**
