@@ -84,16 +84,21 @@ $hasArms = $Proj->longitudinal && $Proj->multiple_arms; ?>
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <?php $module->initEventForms(); ?>
+
                     <div class="form-group">
-                        <button 
-                            id="btn-delete-selection"
-                            class="btn btn-danger" 
-                            disabled>
+                        <button
+                                id="btn-delete-selection"
+                                class="btn btn-danger"
+                                disabled>
                             <i class="fas fa-trash-alt"></i> Delete
-                        </button>                               
-                    </div>                
+                        </button>
+                    </div>
+
                 </form>
             </div>
         </div>
     <?php endif; ?>
+
 </div>
