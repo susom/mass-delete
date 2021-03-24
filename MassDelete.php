@@ -260,7 +260,11 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
                         // Split out the form and event
                         list($selected_event_name, $selected_event_id, $selected_form) = $this->splitFormEvent($one_form_event);
-                        $deleted_forms .= '   <li>[' . $selected_event_name . '] ' . $selected_form;
+                        if (empty($selected_event_name)) {
+                            $deleted_forms .= '   <li> ' . $selected_form;
+                        } else {
+                            $deleted_forms .= '   <li>[' . $selected_event_name . '] ' . $selected_form;
+                        }
 
                         // See if this is a repeating
                         $repeating = $Proj->getRepeatingFormsEvents();
