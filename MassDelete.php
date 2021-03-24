@@ -2,8 +2,8 @@
 namespace Stanford\MassDelete;
 
 use RCView;
-use \Plugin;
 use \Exception;
+use \Records;
 require_once 'RepeatingForms.php';
 
 class MassDelete extends \ExternalModules\AbstractExternalModule
@@ -209,8 +209,6 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
 		if (isset($_POST['delete']) && $_POST['delete'] == 'true') {
 
-            Plugin::log("POST: " . json_encode($_POST));
-
             global $Proj;
 
             // See if we are deleting forms in events or whole records
@@ -262,17 +260,23 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
                         // Split out the form and event
                         list($selected_event_name, $selected_event_id, $selected_form) = $this->splitFormEvent($one_form_event);
-                        $deleted_forms .= '   <li>[' . $selected_event_name . '] ' . $selected_form;
+                        if (empty($selected_event_name)) {
+                            $deleted_forms .= '   <li> ' . $selected_form;
+                        } else {
+                            $deleted_forms .= '   <li>[' . $selected_event_name . '] ' . $selected_form;
+                        }
 
                         // See if this is a repeating
                         $repeating = $Proj->getRepeatingFormsEvents();
-                        if (empty($repeating[$selected_event_id][$selected_form])) {
-                            $repeat_form = false;
-                        } else {
+                        $forms_in_event = array_keys($repeating[$selected_event_id]);
+                        if (in_array($selected_form, $forms_in_event) or
+                            ($repeating[$selected_event_id] == 'WHOLE')) {
                             $repeat_form = true;
+                        } else {
+                            $repeat_form = false;
                         }
 
-                        $status = $this->deleteForm($selected_event_id, $selected_form, $repeat_form, $valid_records);
+                        $this->deleteForm($selected_event_id, $selected_form, $repeat_form, $valid_records);
 
                     }
                     $this->notes[] = "<b>Deleted forms " . $deleted_forms . "<br> for " . count($valid_records) . " record" .
@@ -350,7 +354,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
             try {
                 $rf = new RepeatingForms($proj_id, $selected_form);
             } catch (Exception $ex) {
-                Plugin::log("Exception when creating class RepeatingForms");
+                //Plugin::log("Exception when creating class RepeatingForms");
                 return;
             }
             foreach($record_list as $record_id) {
@@ -358,14 +362,14 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
                 $all_instances = $rf->getAllInstanceIds($record_id, $selected_event_id);
                 foreach($all_instances as $instance_id) {
                     $log_id = $rf->deleteInstance($record_id, $instance_id, $selected_event_id);
+                    //Plugin::log("Delete record $record_id, event_id $selected_event_id, instance $instance_id with log id $log_id");
 ;               }
             }
 
         } else {
 
             foreach($record_list as $record_id) {
-                $log_id = \Records::deleteForm($proj_id, $record_id, $selected_form, $selected_event_id, null);
-                Plugin::log("Log ID is $log_id for delete of form $selected_form, record $record_id in project $proj_id");
+                $log_id = Records::deleteForm($proj_id, $record_id, $selected_form, $selected_event_id, null);
             }
         }
     }
