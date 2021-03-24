@@ -2,7 +2,6 @@
 namespace Stanford\MassDelete;
 
 use RCView;
-use \Plugin;
 use \Exception;
 use \Records;
 require_once 'RepeatingForms.php';
@@ -351,7 +350,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
             try {
                 $rf = new RepeatingForms($proj_id, $selected_form);
             } catch (Exception $ex) {
-                Plugin::log("Exception when creating class RepeatingForms");
+                //Plugin::log("Exception when creating class RepeatingForms");
                 return;
             }
             foreach($record_list as $record_id) {
@@ -359,7 +358,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
                 $all_instances = $rf->getAllInstanceIds($record_id, $selected_event_id);
                 foreach($all_instances as $instance_id) {
                     $log_id = $rf->deleteInstance($record_id, $instance_id, $selected_event_id);
-                    Plugin::log("Delete record $record_id, event_id $selected_event_id, instance $instance_id with log id $log_id");
+                    //Plugin::log("Delete record $record_id, event_id $selected_event_id, instance $instance_id with log id $log_id");
 ;               }
             }
 
