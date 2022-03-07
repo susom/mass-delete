@@ -6,23 +6,62 @@ $(function() {
         var selection;
 
         var btn_delete_selection = $('#btn-delete-selection');
-        var btn_validate_input = $('#btn-validate-input');
+        var txtarea_custom_list = $('.list-input-step');
 
         // A $( document ).ready() block.
         $( document ).ready(function() {    
             group_id = $('input[name="group_id"]').val();
+
+            //  input validation on change: accept only comma - or return separated values
+            txtarea_custom_list.on('change keyup paste', function(){
+
+                var content = $('.list-input-step').val();
+                var list = $.map(content.split(/\n|,/), $.trim).filter(Boolean);
+
+                if(list.length > 0 ) {
+
+                    var isValid=true;
+
+                    for (let index = 0; index < list.length; index++) {
+                        //  Set to invalid
+                        if(!$.isNumeric(list[index])) {
+                            $('.list-input-step').removeClass('is-valid').addClass('is-invalid');
+                            $('#validateHelpBlock').hide();
+                            $('#validInputBlock').hide();
+                            $('#invalidInputBlock').show();
+                            btn_delete_selection.prop("disabled", true);
+                            isValid=false;
+                            index = list.length;    // break loop since there is invalid input already
+                        }
+                    }
+
+                    if(isValid){
+                        //  Set to valid
+                        $('.list-input-step').removeClass('is-invalid').addClass('is-valid');
+                        $('#validateHelpBlock').hide();
+                        $('#invalidInputBlock').hide();
+                        $('#validInputBlock').show();
+                        btn_delete_selection.prop("disabled", false);
+                        renderCustomList(list);
+                        setSelection()
+                    }
+
+                } else {
+                    //  Back to default
+                    $('.list-input-step').removeClass('is-valid is-invalid');
+                    btn_delete_selection.prop("disabled", true);
+                    $('#validateHelpBlock').show();
+                    $('#invalidInputBlock').hide();
+                    $('#validInputBlock').hide();
+                }
+
+            })
 
             $('#arm-select').on('change', (e) => {
                 arm_id = e.target.value;
                 $('.list-input-step').prop("disabled", false);
                 setView('fetch');
             })
-    
-            $('.list-input-step').on('input', () => {
-                btn_validate_input.prop("disabled", false);
-            })
-    
-            btn_validate_input.on('click', fetchInputs )
     
             $('#btn-fetch-records').on('click', fetchRecords )
     
@@ -92,19 +131,6 @@ $(function() {
             title.html("");
 
         })
-
-        function fetchInputs() {
-            var list = $('.list-input-step').val();
-            var items = $.map(list.split(/\n|,/), $.trim).filter(Boolean);
-            renderCustomList(items);
-            setSelection()
-
-            if(items.length > 0 ) {
-                $('.list-input-step').addClass('is-valid');
-            } else {
-                $('.list-input-step').addClass('is-invalid');
-            }
-        }
 
         function renderCustomList(records) {
 
