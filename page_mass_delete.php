@@ -37,21 +37,17 @@ $hasArms = $Proj->longitudinal && $Proj->multiple_arms; ?>
                 <?php endif; ?>                       
                 <?php if( isset($_GET['view']) && $_GET['view'] == 'custom-list' ): ?>
                     <div class="form-group">
-                        <p>Enter a comma-separated or return-separated list of record ids</p>
                         <div class="input-group">
                             <textarea <?= $hasArms ? "disabled" : "" ?> class="form-control list-input-step"  rows="10" aria-label="With textarea"></textarea>
-                            <div class="input-group-append">
-                                <button 
-                                    class="btn btn-outline-secondary" 
-                                    type="button"                                    
-                                    id="btn-validate-input"
-                                    disabled>
-                                    <span id="btn-validate-text">Validate</span>
-                                </button>
-                            </div>
                         </div>
                         <small id="validateHelpBlock" class="form-text text-muted">
-                            Please <b>validate</b> your custom list input before delete is enabled.
+                            Enter a comma-separated or return-separated list of numeric record ids
+                        </small>
+                        <small id="invalidInputBlock" class="invalid-feedback">
+                            Invalid list entered
+                        </small>
+                        <small id="validInputBlock" class="valid-feedback">
+                            Valid list entered
                         </small>
                     </div>
                     <div class="form-group">
