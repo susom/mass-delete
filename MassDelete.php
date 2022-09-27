@@ -241,7 +241,9 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
                             $record,
                             $Proj->table_pk,
                             $Proj->multiple_arms,
-                            $Proj->project_id['randomization'],
+                            #$Proj->project_id['randomization'],
+			    $Proj->project_id,				
+			    #PHP81 Fix
                             $Proj->project['status'],
                             $Proj->project['require_change_reason'],
                             $this->arm_id,
@@ -279,8 +281,8 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
                         $this->deleteForm($selected_event_id, $selected_form, $repeat_form, $valid_records);
 
                     }
-                    $this->notes[] = "<b>Deleted forms " . $deleted_forms . "<br> for " . count($valid_records) . " record" .
-                        (count($valid_records) > 1 ? "s" : "") .
+                    $this->notes[] = "<b>Deleted forms " . $deleted_forms . "<br> for " . count((array)$valid_records) . " record" .
+                        (count((array)$valid_records) > 1 ? "s" : "") .
                         "</b>";
                 }
             }
