@@ -241,9 +241,8 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
                             $record,
                             $Proj->table_pk,
                             $Proj->multiple_arms,
-                            #$Proj->project_id['randomization'],
-			    $Proj->project_id,				
 			    #PHP81 Fix
+                            $Proj->project['randomization'],			   			    
                             $Proj->project['status'],
                             $Proj->project['require_change_reason'],
                             $this->arm_id,
