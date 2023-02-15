@@ -356,6 +356,8 @@ class RepeatingForms
         // All instance IDs
         if ($this->is_longitudinal) {
             return array_keys($this->data[$record_id][$event_id]);
+        } else if (is_null($this->data)) {
+            return null;
         } else {
             return array_keys($this->data[$record_id]);
         }

@@ -4,6 +4,7 @@ $(function() {
         var arm_id;
         var group_id;
         var selection;
+        var record_list;
 
         var btn_delete_selection = $('#btn-delete-selection');
         var txtarea_custom_list = $('.list-input-step');
@@ -22,9 +23,12 @@ $(function() {
 
                     var isValid=true;
 
+                    // Retrieve list of current records so we can compare against records entered
+                    fetchRecords();
+
                     for (let index = 0; index < list.length; index++) {
-                        //  Set to invalid
-                        if(!$.isNumeric(list[index])) {
+                        //  Set to invalid if the record does not exist in the project
+                        if ($.inArray(list[index], record_list) < 0) {
                             $('.list-input-step').removeClass('is-valid').addClass('is-invalid');
                             $('#validateHelpBlock').hide();
                             $('#validInputBlock').hide();
@@ -145,8 +149,9 @@ $(function() {
             })
         }
 
+
         function fetchRecords() {
-            
+
             setView('fetching');
             $.ajax({
                 method: 'POST',
@@ -157,11 +162,12 @@ $(function() {
                     group_id: group_id
                 },
                 success: function(data) {
-                    renderRecordList(data.records);    
+                    renderRecordList(data.records);
+                    record_list = data.records.toString().split(",");
                 },
                 error: function(data) {
                     alert("Unknown Error: Could not fetch records.")
-                }            
+                }
             });
 
         }
