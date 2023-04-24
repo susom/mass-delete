@@ -269,12 +269,15 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
                         // See if this is a repeating
                         $repeating = $Proj->getRepeatingFormsEvents();
-                        $forms_in_event = array_keys($repeating[$selected_event_id]);
-                        if (in_array($selected_form, $forms_in_event) or
-                            ($repeating[$selected_event_id] == 'WHOLE')) {
-                            $repeat_form = true;
-                        } else {
-                            $repeat_form = false;
+
+                        $repeat_form = false;
+                        if (!empty($repeating) && !is_null($repeating[$selected_event_id])) {
+                            // If this event is repeating, make sure this form is repeating or the whole event is repeating
+                            $forms_in_event = array_keys($repeating[$selected_event_id]);
+                            if (in_array($selected_form, $forms_in_event) or
+                                ($repeating[$selected_event_id] == 'WHOLE')) {
+                                $repeat_form = true;
+                            }
                         }
 
                         $this->deleteForm($selected_event_id, $selected_form, $repeat_form, $valid_records);
@@ -347,9 +350,7 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
 
     public function deleteForm($selected_event_id, $selected_form, $repeating_form, $record_list) {
 
-	    global $Proj;
-
-        $proj_id = $Proj->project_id;
+        $proj_id = $this->getProjectId();
 	    if ($repeating_form) {
             // Using the repeating class to delete instances
             try {
