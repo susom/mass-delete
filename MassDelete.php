@@ -319,8 +319,8 @@ class MassDelete extends \ExternalModules\AbstractExternalModule
     public function getFormEventList() {
         global $Proj;
 
-        $forms =  \RecordDashboard::renderSelectedFormsEvents();
-        //$forms = $Proj->renderSelectedFormsEvents();
+        //$forms =  \RecordDashboard::renderSelectedFormsEvents();
+        $forms = $Proj->renderSelectedFormsEvents();
         print $forms;
     }
 
